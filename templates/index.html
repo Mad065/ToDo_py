@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lista de tareas</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="header">
+        <p class="eyebrow">To-do</p>
+        <h1>Tareas pendientes</h1>
+        <p class="subtitle">
+          {% if pending %}
+            {{ pending }} {{ "tarea pendiente" if pending == 1 else "tareas pendientes" }}
+          {% else %}
+            No hay tareas pendientes
+          {% endif %}
+        </p>
+      </header>
+
+      <form class="add-form" action="{{ url_for('create_task') }}" method="post">
+        <label class="sr-only" for="title">Nueva tarea</label>
+        <input
+          id="title"
+          name="title"
+          type="text"
+          placeholder="Escribe una nueva tarea"
+          autocomplete="off"
+          required
+        />
+        <button type="submit">Agregar</button>
+      </form>
+
+      {% if tasks %}
+        <ul class="task-list">
+          {% for task in tasks %}
+            <li class="task{% if task.done %} is-done{% endif %}">
+              <div>
+                <p class="task-title">{{ task.title }}</p>
+                <p class="task-meta">{{ task.created_at }}</p>
+              </div>
+              {% if task.done %}
+                <span class="badge">Completada</span>
+              {% else %}
+                <form action="{{ url_for('mark_complete', task_id=task.id) }}" method="post">
+                  <button type="submit">Completar</button>
+                </form>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="empty">Agrega tu primera tarea para empezar.</p>
+      {% endif %}
+    </main>
+  </body>
+</html>
