@@ -8,52 +8,344 @@
   </head>
   <body>
     <main class="app">
-      <header class="header">
-        <p class="eyebrow">To-do</p>
-        <h1>Tareas pendientes</h1>
-        <p class="subtitle">
-          {% if pending %}
-            {{ pending }} {{ "tarea pendiente" if pending == 1 else "tareas pendientes" }}
-          {% else %}
-            No hay tareas pendientes
-          {% endif %}
-        </p>
-      </header>
+      <div class="layout">
 
-      <form class="add-form" action="{{ url_for('create_task') }}" method="post">
-        <label class="sr-only" for="title">Nueva tarea</label>
-        <input
-          id="title"
-          name="title"
-          type="text"
-          placeholder="Escribe una nueva tarea"
-          autocomplete="off"
-          required
-        />
-        <button type="submit">Agregar</button>
-      </form>
+        <!-- ══════════ Columna Izquierda: Listas ══════════ -->
+        <aside class="sidebar">
+          <h2>Listas</h2>
+          <ul class="list-nav">
+            {% set default_lists = lists | selectattr('is_default') | list %}
+            {% set user_lists = lists | rejectattr('is_default') | list %}
 
-      {% if tasks %}
-        <ul class="task-list">
-          {% for task in tasks %}
-            <li class="task{% if task.done %} is-done{% endif %}">
-              <div>
-                <p class="task-title">{{ task.title }}</p>
-                <p class="task-meta">{{ task.created_at }}</p>
-              </div>
-              {% if task.done %}
-                <span class="badge">Completada</span>
+            {% for lst in default_lists %}
+              <li>
+                <a
+                  href="{{ url_for('index', list=lst.id) }}"
+                  class="list-item{% if lst.id == current_list_id %} active{% endif %}"
+                >
+                  {{ lst.name }}
+                </a>
+              </li>
+            {% endfor %}
+
+            {% if user_lists %}
+              <li class="list-divider"></li>
+              {% for lst in user_lists %}
+                <li>
+                  {% if edit_list_id == lst.id %}
+                    <form class="inline-edit-form" action="{{ url_for('rename_list', list_id=lst.id) }}" method="post">
+                      <input
+                        type="text"
+                        name="name"
+                        value="{{ lst.name }}"
+                        placeholder="Nombre de la lista"
+                        class="inline-edit-input"
+                        autofocus
+                        data-inline-edit
+                      />
+                    </form>
+                  {% else %}
+                    <a
+                      href="{{ url_for('index', list=lst.id) }}"
+                      class="list-item{% if lst.id == current_list_id %} active{% endif %}"
+                    >
+                      {{ lst.name }}
+                    </a>
+                  {% endif %}
+                </li>
+              {% endfor %}
+            {% endif %}
+          </ul>
+
+          <form class="add-list-form" action="{{ url_for('quick_create_list') }}" method="post">
+            <button type="submit" title="Nueva lista">+</button>
+          </form>
+
+          <!-- Botón de configuración -->
+          <button class="settings-btn" id="settings-btn" title="Configuración">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+          </button>
+        </aside>
+
+        <!-- ══════════ Columna Central: Tareas ══════════ -->
+        <section class="main-content">
+          <header class="header">
+            <h1>{{ current_list_name }}</h1>
+            <p class="subtitle">
+              {% if pending %}
+                {{ pending }} {{ "tarea pendiente" if pending == 1 else "tareas pendientes" }}
               {% else %}
-                <form action="{{ url_for('mark_complete', task_id=task.id) }}" method="post">
-                  <button type="submit">Completar</button>
-                </form>
+                No hay tareas pendientes
               {% endif %}
-            </li>
-          {% endfor %}
-        </ul>
-      {% else %}
-        <p class="empty">Agrega tu primera tarea para empezar.</p>
-      {% endif %}
+            </p>
+          </header>
+
+          {% if tasks %}
+            <ul class="task-list">
+              {% for task in tasks %}
+                <li class="task{% if task.done %} is-done{% endif %}">
+                  <div>
+                    <p class="task-title">{{ task.title }}</p>
+                    <p class="task-meta">
+                      {{ task.created_at }}
+                      {% if task.due_date %} &middot; &#128197; {{ task.due_date }}{% endif %}
+                    </p>
+                  </div>
+                  {% if task.done %}
+                    <span class="badge">Completada</span>
+                  {% else %}
+                    <form action="{{ url_for('mark_complete', task_id=task.id) }}" method="post">
+                      <button type="submit">Completar</button>
+                    </form>
+                  {% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="empty">Agrega tu primera tarea para empezar.</p>
+          {% endif %}
+
+          <!-- Botón flotante + -->
+          <button class="fab" id="fab" title="Nueva tarea">+</button>
+        </section>
+
+        <!-- ══════════ Columna Derecha: Calendario + Programadas ══════════ -->
+        <aside class="right-panel">
+
+          <div class="calendar">
+            <h3>{{ month_name }} {{ today.year }}</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>L</th><th>M</th><th>X</th><th>J</th><th>V</th><th>S</th><th>D</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for week in cal_days %}
+                  <tr>
+                    {% for day in week %}
+                      <td
+                        class="{% if day == today.day %}today{% endif %}{% if day == 0 %} empty{% endif %}"
+                      >
+                        {{ day if day != 0 else "" }}
+                      </td>
+                    {% endfor %}
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="scheduled">
+            <h3>Programadas</h3>
+            {% if scheduled %}
+              {% set grouped = scheduled | groupby('due_date') %}
+              {% for due_date, tasks in grouped %}
+                <div class="scheduled-section">
+                  <h4>{{ due_date }}</h4>
+                  <ul>
+                    {% for task in tasks %}
+                      <li>
+                        <span>{{ task.title }}</span>
+                        <span class="list-tag">{{ task.list_name }}</span>
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              {% endfor %}
+            {% else %}
+              <p class="empty">No hay tareas programadas.</p>
+            {% endif %}
+          </div>
+
+        </aside>
+      </div>
     </main>
+
+    <!-- ══════════ Modal: Nueva Tarea ══════════ -->
+    <div class="modal-overlay" id="modal-overlay">
+      <div class="modal">
+        <h3>Nueva tarea</h3>
+        <form action="{{ url_for('create_task') }}" method="post">
+          <input type="hidden" name="list_id" value="{{ current_list_id }}" />
+          <div class="modal-field">
+            <label for="modal-title">Título</label>
+            <input
+              id="modal-title"
+              type="text"
+              name="title"
+              placeholder="Escribe una nueva tarea"
+              autocomplete="off"
+              required
+              autofocus
+            />
+          </div>
+          <div class="modal-field">
+            <label for="modal-due-date">Fecha límite</label>
+            <input id="modal-due-date" type="date" name="due_date" />
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-cancel" id="modal-cancel">Cancelar</button>
+            <button type="submit" class="btn-submit">Agregar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ══════════ Modal: Configuración ══════════ -->
+    <div class="modal-overlay" id="settings-overlay">
+      <div class="modal settings-modal">
+        <h3>Configuración</h3>
+
+        <!-- Tema de fondo -->
+        <div class="settings-section">
+          <h4>Tema de fondo</h4>
+          <div class="theme-swatches">
+            <button class="swatch active" data-theme="purple" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)" title="Púrpura"></button>
+            <button class="swatch" data-theme="ocean" style="background: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%)" title="Océano"></button>
+            <button class="swatch" data-theme="sunset" style="background: linear-gradient(135deg, #f12711 0%, #f5af19 100%)" title="Atardecer"></button>
+            <button class="swatch" data-theme="forest" style="background: linear-gradient(135deg, #134e5e 0%, #71b280 100%)" title="Bosque"></button>
+            <button class="swatch" data-theme="midnight" style="background: linear-gradient(135deg, #232526 0%, #414345 100%)" title="Medianoche"></button>
+            <button class="swatch" data-theme="candy" style="background: linear-gradient(135deg, #fc5c7d 0%, #6a82fb 100%)" title="Caramelo"></button>
+          </div>
+        </div>
+
+        <!-- Intensidad del blur -->
+        <div class="settings-section">
+          <h4>Intensidad del desenfoque</h4>
+          <div class="slider-container">
+            <input type="range" min="0" max="40" value="20" id="blur-slider" class="blur-slider" />
+            <span class="slider-value" id="blur-value">20px</span>
+          </div>
+        </div>
+
+        <!-- Animaciones -->
+        <div class="settings-section">
+          <h4>Animaciones</h4>
+          <label class="toggle-container">
+            <span>Activar animaciones suaves</span>
+            <input type="checkbox" id="animations-toggle" checked />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <!-- Eliminar listas personalizadas -->
+        <div class="settings-section">
+          <h4>Eliminar listas personalizadas</h4>
+          {% set user_lists = lists | rejectattr('is_default') | list %}
+          {% if user_lists %}
+            <div class="delete-lists">
+              {% for lst in user_lists %}
+                <div class="delete-list-item">
+                  <span>{{ lst.name }}</span>
+                  <form action="{{ url_for('delete_list_route', list_id=lst.id) }}" method="post">
+                    <button type="submit" class="btn-delete">Eliminar</button>
+                  </form>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="empty">No hay listas personalizadas.</p>
+          {% endif %}
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" id="settings-close">Cerrar</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // ── Modal de nueva tarea ──
+      const fab = document.getElementById('fab');
+      const overlay = document.getElementById('modal-overlay');
+      const cancelBtn = document.getElementById('modal-cancel');
+
+      fab.addEventListener('click', () => overlay.classList.add('open'));
+      cancelBtn.addEventListener('click', () => overlay.classList.remove('open'));
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.classList.remove('open');
+      });
+
+      // ── Modal de configuración ──
+      const settingsBtn = document.getElementById('settings-btn');
+      const settingsOverlay = document.getElementById('settings-overlay');
+      const settingsClose = document.getElementById('settings-close');
+
+      settingsBtn.addEventListener('click', () => settingsOverlay.classList.add('open'));
+      settingsClose.addEventListener('click', () => settingsOverlay.classList.remove('open'));
+      settingsOverlay.addEventListener('click', (e) => {
+        if (e.target === settingsOverlay) settingsOverlay.classList.remove('open');
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          overlay.classList.remove('open');
+          settingsOverlay.classList.remove('open');
+        }
+      });
+
+      // ── Inline edit: submit on blur ──
+      document.querySelectorAll('[data-inline-edit]').forEach(input => {
+        input.addEventListener('blur', () => input.closest('form').submit());
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') input.closest('form').submit();
+        });
+      });
+
+      // ── Temas de fondo ──
+      const themeGradients = {
+        purple: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+        ocean: 'linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%)',
+        sunset: 'linear-gradient(135deg, #f12711 0%, #f5af19 100%)',
+        forest: 'linear-gradient(135deg, #134e5e 0%, #71b280 100%)',
+        midnight: 'linear-gradient(135deg, #232526 0%, #414345 100%)',
+        candy: 'linear-gradient(135deg, #fc5c7d 0%, #6a82fb 100%)',
+      };
+
+      const swatches = document.querySelectorAll('.swatch');
+      const savedTheme = localStorage.getItem('todo-theme') || 'purple';
+
+      function applyTheme(theme) {
+        document.body.style.background = themeGradients[theme];
+        swatches.forEach(s => s.classList.toggle('active', s.dataset.theme === theme));
+        localStorage.setItem('todo-theme', theme);
+      }
+
+      swatches.forEach(s => {
+        s.addEventListener('click', () => applyTheme(s.dataset.theme));
+      });
+      applyTheme(savedTheme);
+
+      // ── Blur slider ──
+      const blurSlider = document.getElementById('blur-slider');
+      const blurValue = document.getElementById('blur-value');
+      const savedBlur = localStorage.getItem('todo-blur') || 20;
+
+      function applyBlur(val) {
+        document.documentElement.style.setProperty('--blur-amount', val + 'px');
+        blurValue.textContent = val + 'px';
+        localStorage.setItem('todo-blur', val);
+      }
+
+      blurSlider.addEventListener('input', () => applyBlur(blurSlider.value));
+      applyBlur(savedBlur);
+
+      // ── Toggle animaciones ──
+      const animToggle = document.getElementById('animations-toggle');
+      const savedAnim = localStorage.getItem('todo-animations') !== 'off';
+
+      function applyAnimations(enabled) {
+        document.documentElement.classList.toggle('no-animations', !enabled);
+        animToggle.checked = enabled;
+        localStorage.setItem('todo-animations', enabled ? 'on' : 'off');
+      }
+
+      animToggle.addEventListener('change', () => applyAnimations(animToggle.checked));
+      applyAnimations(savedAnim);
+    </script>
   </body>
 </html>
