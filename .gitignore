@@ -2,3 +2,6 @@
 __pycache__/
 *.pyc
 todo.db
+.agents
+.opencode
+skills-lock.json

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Calendario - Tareas</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  </head>
+  <body>
+    <main class="app">
+      <div class="calendar-layout">
+
+        <!-- ══════════ Calendario ══════════ -->
+        <section class="calendar-panel">
+          <div class="calendar-nav">
+            <a href="{{ url_for('calendar_view', year=prev_year, month=prev_month) }}" class="nav-btn" title="Mes anterior">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            </a>
+            <h1 class="calendar-title">{{ month_name }} {{ year }}</h1>
+            <a href="{{ url_for('calendar_view', year=next_year, month=next_month) }}" class="nav-btn" title="Mes siguiente">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </a>
+          </div>
+
+          <table class="calendar-table">
+            <thead>
+              <tr>
+                <th>Lunes</th>
+                <th>Martes</th>
+                <th>Miércoles</th>
+                <th>Jueves</th>
+                <th>Viernes</th>
+                <th>Sábado</th>
+                <th>Domingo</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for week in cal_days %}
+                <tr>
+                  {% for day in week %}
+                    {% set date_str = '%04d-%02d-%02d' | format(year, month, day) %}
+                    <td
+                      class="
+                        {% if day == 0 %}empty{% endif %}
+                        {% if day != 0 and today.year == year and today.month == month and today.day == day %}today{% endif %}
+                        {% if tasks_by_date.get(date_str) %}has-tasks{% endif %}
+                      "
+                    >
+                      {% if day != 0 %}
+                        <span class="day-number">{{ day }}</span>
+                        {% set day_tasks = tasks_by_date.get(date_str, []) %}
+                        {% if day_tasks %}
+                          <span class="task-dots">
+                            {% for task in day_tasks[:3] %}
+                              <span class="dot"></span>
+                            {% endfor %}
+                            {% if day_tasks|length > 3 %}
+                              <span class="more">+{{ day_tasks|length - 3 }}</span>
+                            {% endif %}
+                          </span>
+                        {% endif %}
+                      {% endif %}
+                    </td>
+                  {% endfor %}
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+
+          <a href="{{ url_for('index') }}" class="back-link">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            Volver a la lista
+          </a>
+        </section>
+
+        <!-- ══════════ Panel Lateral: Tareas Pendientes ══════════ -->
+        <aside class="tasks-panel">
+          <h2>Tareas Programadas</h2>
+          {% if scheduled %}
+            {% set grouped = scheduled | groupby('due_date') %}
+            {% for due_date, tasks in grouped %}
+              <div class="scheduled-section">
+                <h3>{{ due_date }}</h3>
+                <ul>
+                  {% for task in tasks %}
+                    <li>
+                      <span class="task-title">{{ task.title }}</span>
+                      <span class="list-tag">{{ task.list_name }}</span>
+                    </li>
+                  {% endfor %}
+                </ul>
+              </div>
+            {% endfor %}
+          {% else %}
+            <p class="empty">No hay tareas programadas.</p>
+          {% endif %}
+        </aside>
+
+      </div>
+    </main>
+
+    <script>
+      const themeGradients = {
+        purple: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+        ocean: 'linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%)',
+        sunset: 'linear-gradient(135deg, #f12711 0%, #f5af19 100%)',
+        forest: 'linear-gradient(135deg, #134e5e 0%, #71b280 100%)',
+        midnight: 'linear-gradient(135deg, #232526 0%, #414345 100%)',
+        candy: 'linear-gradient(135deg, #fc5c7d 0%, #6a82fb 100%)',
+      };
+
+      const savedTheme = localStorage.getItem('todo-theme') || 'purple';
+      document.body.style.background = themeGradients[savedTheme];
+
+      const savedBlur = localStorage.getItem('todo-blur') || 20;
+      document.documentElement.style.setProperty('--blur-amount', savedBlur + 'px');
+
+      const savedAnim = localStorage.getItem('todo-animations') !== 'off';
+      if (!savedAnim) {
+        document.documentElement.classList.add('no-animations');
+      }
+    </script>
+  </body>
+</html>

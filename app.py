@@ -53,6 +53,48 @@ def index():
     )
 
 
+@app.route("/calendar")
+def calendar_view():
+    today = date.today()
+    year = int(request.args.get("year", today.year))
+    month = int(request.args.get("month", today.month))
+
+    if month < 1:
+        month = 12
+        year -= 1
+    elif month > 12:
+        month = 1
+        year += 1
+
+    cal_days = calendar.Calendar().monthdayscalendar(year, month)
+    scheduled = get_scheduled_tasks()
+
+    tasks_by_date = {}
+    for task in scheduled:
+        d = task["due_date"]
+        tasks_by_date.setdefault(d, []).append(task)
+
+    prev_month = month - 1 if month > 1 else 12
+    prev_year = year if month > 1 else year - 1
+    next_month = month + 1 if month < 12 else 1
+    next_year = year if month < 12 else year + 1
+
+    return render_template(
+        "calendar.html",
+        cal_days=cal_days,
+        today=today,
+        year=year,
+        month=month,
+        month_name=calendar.month_name[month],
+        scheduled=scheduled,
+        tasks_by_date=tasks_by_date,
+        prev_year=prev_year,
+        prev_month=prev_month,
+        next_year=next_year,
+        next_month=next_month,
+    )
+
+
 @app.post("/tasks")
 def create_task():
     title = (request.form.get("title") or "").strip()

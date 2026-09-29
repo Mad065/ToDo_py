@@ -1,27 +1,29 @@
 # ToDo_py - Lista de Tareas
 
-Una aplicación web sencilla, rápida y elegante para la gestión de tareas pendientes, desarrollada con **Python**, **Flask** y **SQLite**.
+Una aplicación web elegante para la gestión de tareas pendientes, desarrollada con **Python**, **Flask** y **SQLite**.
 
 ---
 
-## 🚀 Características
+## Características
 
-- **Gestión de tareas:** Agrega nuevas tareas y márcalas como completadas con un solo clic.
+- **Gestion de tareas:** Agrega nuevas tareas y márcalas como completadas con un solo clic.
+- **Listas personalizadas:** Crea, renombra y elimina listas para organizar tus tareas.
+- **Calendario:** Vista de calendario con navegación entre meses y tareas programadas.
 - **Persistencia de datos:** Base de datos relacional ligera con SQLite (`todo.db`), sin necesidad de configurar servidores de base de datos externos.
-- **Contador en tiempo real:** Muestra dinámicamente el número de tareas pendientes.
-- **Interfaz limpia y moderna:** Diseño minimalista, responsivo y adaptado para dispositivos móviles y escritorio.
+- **Contador en tiempo real:** Muestra dinámicamente el numero de tareas pendientes.
+- **Interfaz glassmorphism:** Diseño moderno con efectos de desenfoque, temas de fondo configurables y responsivo para dispositivos moviles y escritorio.
 
 ---
 
-## 🛠️ Tecnologías Utilizadas
+## Tecnologias Utilizadas
 
 - **Backend:** Python 3, [Flask](https://flask.palletsprojects.com/) (3.1.x)
 - **Base de datos:** SQLite3
-- **Frontend:** HTML5, CSS3 (Vanilla)
+- **Frontend:** HTML5, CSS3 (Vanilla), Jinja2
 
 ---
 
-## 📁 Estructura del Proyecto
+## Estructura del Proyecto
 
 ```text
 ToDo_py/
@@ -31,14 +33,15 @@ ToDo_py/
 ├── static/
 │   └── style.css       # Hoja de estilos de la interfaz
 ├── templates/
-│   └── index.html      # Plantilla principal renderizada con Jinja2
-├── todo.db             # Archivo de base de datos SQLite (se genera automáticamente)
+│   ├── index.html      # Plantilla principal renderizada con Jinja2
+│   └── calendar.html   # Plantilla de calendario completo
+├── todo.db             # Archivo de base de datos SQLite (se genera automaticamente)
 └── README.md           # Documentación del proyecto
 ```
 
 ---
 
-## ⚙️ Instalación y Configuración
+## Instalación y Configuración
 
 Sigue estos pasos para ejecutar el proyecto en tu entorno local:
 
@@ -70,7 +73,7 @@ pip install -r requirements.txt
 
 ---
 
-## ▶️ Ejecución
+## Ejecución
 
 Para iniciar el servidor de desarrollo, ejecuta:
 
@@ -84,16 +87,21 @@ Una vez iniciado, abre tu navegador web y accede a:
 
 ---
 
-## 📌 Rutas Disponibles
+## Rutas Disponibles
 
 | Método | Ruta | Descripción |
 | :--- | :--- | :--- |
-| `GET` | `/` | Vista principal con la lista de tareas y contador de pendientes |
+| `GET` | `/` | Vista principal con listas, tareas y calendario |
+| `GET` | `/calendar` | Calendario completo con navegación entre meses |
 | `POST` | `/tasks` | Crea y guarda una nueva tarea |
 | `POST` | `/tasks/<id>/complete` | Marca la tarea especificada como completada |
+| `POST` | `/lists` | Crea una nueva lista |
+| `POST` | `/lists/quick` | Crea una lista vacía |
+| `POST` | `/lists/<id>/rename` | Renombra una lista (nombre vacío la elimina) |
+| `POST` | `/lists/<id>/delete` | Elimina una lista personalizada y sus tareas |
 
 ---
 
-## 📄 Licencia
+## Licencia
 
 Este proyecto está bajo la licencia MIT. Siéntete libre de utilizarlo y modificarlo según tus necesidades.
