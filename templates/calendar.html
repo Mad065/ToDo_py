@@ -71,6 +71,9 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
             Volver a la lista
           </a>
+
+          <!-- Botón flotante + -->
+          <button class="fab" id="fab" title="Nueva tarea">+</button>
         </section>
 
         <!-- ══════════ Panel Lateral: Tareas Pendientes ══════════ -->
@@ -99,26 +102,36 @@
       </div>
     </main>
 
-    <script>
-      const themeGradients = {
-        purple: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
-        ocean: 'linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%)',
-        sunset: 'linear-gradient(135deg, #f12711 0%, #f5af19 100%)',
-        forest: 'linear-gradient(135deg, #134e5e 0%, #71b280 100%)',
-        midnight: 'linear-gradient(135deg, #232526 0%, #414345 100%)',
-        candy: 'linear-gradient(135deg, #fc5c7d 0%, #6a82fb 100%)',
-      };
+    <!-- ══════════ Modal: Nueva Tarea ══════════ -->
+    <div class="modal-overlay" id="modal-overlay">
+      <div class="modal">
+        <h3>Nueva tarea</h3>
+        <form action="{{ url_for('create_task') }}" method="post">
+          <input type="hidden" name="list_id" value="1" id="calendar-list-id" />
+          <div class="modal-field">
+            <label for="modal-title">Título</label>
+            <input
+              id="modal-title"
+              type="text"
+              name="title"
+              placeholder="Escribe una nueva tarea"
+              autocomplete="off"
+              required
+              autofocus
+            />
+          </div>
+          <div class="modal-field">
+            <label for="modal-due-date">Fecha límite</label>
+            <input id="modal-due-date" type="date" name="due_date" />
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-cancel" id="modal-cancel">Cancelar</button>
+            <button type="submit" class="btn-submit">Agregar</button>
+          </div>
+        </form>
+      </div>
+    </div>
 
-      const savedTheme = localStorage.getItem('todo-theme') || 'purple';
-      document.body.style.background = themeGradients[savedTheme];
-
-      const savedBlur = localStorage.getItem('todo-blur') || 20;
-      document.documentElement.style.setProperty('--blur-amount', savedBlur + 'px');
-
-      const savedAnim = localStorage.getItem('todo-animations') !== 'off';
-      if (!savedAnim) {
-        document.documentElement.classList.add('no-animations');
-      }
-    </script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
   </body>
 </html>
