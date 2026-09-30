@@ -1,4 +1,5 @@
 import sqlite3
+from datetime import date
 from pathlib import Path
 
 DB_PATH = Path(__file__).parent / "todo.db"
@@ -80,6 +81,80 @@ def get_tasks_by_list(list_id: int) -> list[dict]:
     ]
 
 
+def get_all_tasks() -> list[dict]:
+    init_db()
+    with get_connection() as connection:
+        rows = connection.execute(
+            "SELECT id, title, done, created_at, due_date FROM tasks WHERE done = 0 ORDER BY id DESC"
+        ).fetchall()
+    return [
+        {
+            "id": row["id"],
+            "title": row["title"],
+            "done": bool(row["done"]),
+            "created_at": row["created_at"],
+            "due_date": row["due_date"],
+        }
+        for row in rows
+    ]
+
+
+def get_tasks_today() -> list[dict]:
+    init_db()
+    today = date.today().isoformat()
+    with get_connection() as connection:
+        rows = connection.execute(
+            "SELECT id, title, done, created_at, due_date FROM tasks WHERE due_date = ? ORDER BY done ASC, id DESC",
+            (today,)
+        ).fetchall()
+    return [
+        {
+            "id": row["id"],
+            "title": row["title"],
+            "done": bool(row["done"]),
+            "created_at": row["created_at"],
+            "due_date": row["due_date"],
+        }
+        for row in rows
+    ]
+
+
+def get_tasks_scheduled() -> list[dict]:
+    init_db()
+    with get_connection() as connection:
+        rows = connection.execute(
+            "SELECT id, title, done, created_at, due_date FROM tasks WHERE due_date IS NOT NULL AND done = 0 ORDER BY due_date ASC, id DESC"
+        ).fetchall()
+    return [
+        {
+            "id": row["id"],
+            "title": row["title"],
+            "done": bool(row["done"]),
+            "created_at": row["created_at"],
+            "due_date": row["due_date"],
+        }
+        for row in rows
+    ]
+
+
+def get_tasks_completed() -> list[dict]:
+    init_db()
+    with get_connection() as connection:
+        rows = connection.execute(
+            "SELECT id, title, done, created_at, due_date FROM tasks WHERE done = 1 ORDER BY id DESC"
+        ).fetchall()
+    return [
+        {
+            "id": row["id"],
+            "title": row["title"],
+            "done": bool(row["done"]),
+            "created_at": row["created_at"],
+            "due_date": row["due_date"],
+        }
+        for row in rows
+    ]
+
+
 def get_scheduled_tasks() -> list[dict]:
     init_db()
     with get_connection() as connection:
@@ -141,4 +216,19 @@ def delete_list(list_id: int) -> None:
         connection.execute(
             "DELETE FROM lists WHERE id = ? AND is_default = 0",
             (list_id,)
+        )
+
+
+def delete_task(task_id: int) -> None:
+    init_db()
+    with get_connection() as connection:
+        connection.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
+
+
+def update_task(task_id: int, title: str, due_date: str | None = None) -> None:
+    init_db()
+    with get_connection() as connection:
+        connection.execute(
+            "UPDATE tasks SET title = ?, due_date = ? WHERE id = ?",
+            (title, due_date, task_id)
         )

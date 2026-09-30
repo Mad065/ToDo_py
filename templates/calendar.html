@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
   </head>
   <body>
-    <main class="app">
+    <main class="app calendar-app">
       <div class="calendar-layout">
 
         <!-- ══════════ Calendario ══════════ -->
@@ -79,11 +79,58 @@
         <!-- ══════════ Panel Lateral: Tareas Pendientes ══════════ -->
         <aside class="tasks-panel">
           <h2>Tareas Programadas</h2>
-          {% if scheduled %}
-            {% set grouped = scheduled | groupby('due_date') %}
+          <div class="tasks-panel-content">
+            {% if scheduled %}
+              {% set grouped = scheduled | groupby('due_date') %}
+              {% for due_date, tasks in grouped %}
+                <div class="scheduled-section">
+                  <h3>{{ due_date }}</h3>
+                  <ul>
+                    {% for task in tasks %}
+                      <li>
+                        <span class="task-title">{{ task.title }}</span>
+                        <span class="list-tag">{{ task.list_name }}</span>
+                        <span class="task-actions">
+                          <button type="button" class="btn-edit" data-task-id="{{ task.id }}" data-task-title="{{ task.title }}" data-task-due-date="{{ task.due_date or '' }}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                          </button>
+                          <form action="{{ url_for('delete_task_route', task_id=task.id) }}" method="post" onsubmit="return confirm('Eliminar esta tarea?');">
+                            <button type="submit" class="btn-delete-task">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            </button>
+                          </form>
+                        </span>
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              {% endfor %}
+            {% else %}
+              <p class="empty">No hay tareas programadas.</p>
+            {% endif %}
+          </div>
+        </aside>
+
+      </div>
+
+      <!-- ══════════ Vista Semanal ══════════ -->
+      <section class="week-section">
+        <div class="week-nav">
+          <a href="{{ url_for('calendar_view', year=year, month=month, week=prev_week) }}" class="nav-btn" title="Semana anterior">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </a>
+          <h2 class="week-title">{{ week_start.strftime('%d/%m/%Y') }} - {{ week_end.strftime('%d/%m/%Y') }}</h2>
+          <a href="{{ url_for('calendar_view', year=year, month=month, week=next_week) }}" class="nav-btn" title="Semana siguiente">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </a>
+        </div>
+
+        <div class="week-grid">
+          {% if week_tasks %}
+            {% set grouped = week_tasks | groupby('due_date') %}
             {% for due_date, tasks in grouped %}
-              <div class="scheduled-section">
-                <h3>{{ due_date }}</h3>
+              <div class="week-day">
+                <h3 class="week-day-title">{{ due_date }}</h3>
                 <ul>
                   {% for task in tasks %}
                     <li>
@@ -95,12 +142,40 @@
               </div>
             {% endfor %}
           {% else %}
-            <p class="empty">No hay tareas programadas.</p>
+            <p class="empty">No hay tareas esta semana.</p>
           {% endif %}
-        </aside>
-
-      </div>
+        </div>
+      </section>
     </main>
+
+    <!-- ══════════ Modal: Editar Tarea ══════════ -->
+    <div class="modal-overlay" id="edit-modal-overlay">
+      <div class="modal">
+        <h3>Editar tarea</h3>
+        <form id="edit-task-form" method="post">
+          <div class="modal-field">
+            <label for="edit-title">Título</label>
+            <input
+              id="edit-title"
+              type="text"
+              name="title"
+              placeholder="Título de la tarea"
+              autocomplete="off"
+              required
+              autofocus
+            />
+          </div>
+          <div class="modal-field">
+            <label for="edit-due-date">Fecha límite</label>
+            <input id="edit-due-date" type="date" name="due_date" />
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-cancel" id="edit-modal-cancel">Cancelar</button>
+            <button type="submit" class="btn-submit">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
 
     <!-- ══════════ Modal: Nueva Tarea ══════════ -->
     <div class="modal-overlay" id="modal-overlay">
@@ -108,6 +183,7 @@
         <h3>Nueva tarea</h3>
         <form action="{{ url_for('create_task') }}" method="post">
           <input type="hidden" name="list_id" value="1" id="calendar-list-id" />
+          <input type="hidden" name="from_calendar" value="1" />
           <div class="modal-field">
             <label for="modal-title">Título</label>
             <input
@@ -133,5 +209,6 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/edit-task.js') }}"></script>
   </body>
 </html>

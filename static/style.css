@@ -31,8 +31,8 @@ body {
 
 .app {
   width: min(1400px, calc(100% - 32px));
-  margin: 24px auto;
-  padding: 0;
+  margin: auto;
+  padding: 24px 4px 12px 4px;
 }
 
 .layout {
@@ -40,7 +40,9 @@ body {
   grid-template-columns: 240px 1fr 300px;
   gap: 20px;
   align-items: stretch;
-  min-height: calc(100vh - 48px);
+  height: calc(100vh - 48px);
+  max-height: calc(100vh - 48px);
+  overflow: hidden;
 }
 
 /* ── Glass panel base ─────────────────────────────── */
@@ -61,6 +63,9 @@ body {
   display: flex;
   flex-direction: column;
   position: relative;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
 }
 
 .sidebar h2 {
@@ -69,16 +74,19 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: var(--muted);
+  flex-shrink: 0;
 }
 
 .list-nav {
   list-style: none;
   margin: 0 0 16px;
-  padding: 0;
+  padding: 0 4px 0 0;
   display: flex;
   flex-direction: column;
   gap: 4px;
   flex: 1;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .list-item {
@@ -176,6 +184,13 @@ body {
   position: relative;
   display: flex;
   flex-direction: column;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.header {
+  flex-shrink: 0;
 }
 
 .header h1 {
@@ -192,11 +207,13 @@ body {
 .task-list {
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 0 4px 90px 0;
   display: flex;
   flex-direction: column;
   gap: 8px;
   flex: 1;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .task {
@@ -244,7 +261,6 @@ body {
 }
 
 .task form button {
-  padding: 8px 14px;
   border: 1px solid var(--glass-border);
   border-radius: 10px;
   background: var(--accent);
@@ -280,6 +296,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 10;
 }
 
 .fab:hover {
@@ -297,18 +314,29 @@ body {
   flex-direction: column;
   gap: 20px;
   height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.right-panel .calendar {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
 }
 
 .right-panel .scheduled {
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
-.right-panel .calendar {
+.scheduled-content {
   flex: 1;
-  display: flex;
-  flex-direction: column;
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: 4px;
 }
 
 .calendar h3,
@@ -755,12 +783,94 @@ body {
   animation-duration: 0s !important;
 }
 
+/* ── Task Action Buttons ────────────────────────────── */
+.task-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.btn-complete {
+  padding: 8px 14px;
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  background: var(--accent);
+  color: white;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-complete:hover {
+  background: var(--accent-hover);
+}
+
+.btn-edit,
+.btn-delete-task {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass);
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s;
+  padding: 0;
+}
+
+.btn-edit:hover {
+  background: var(--glass-strong);
+  color: var(--ink);
+}
+
+.btn-delete-task:hover {
+  background: rgba(255, 100, 100, 0.2);
+  color: #ff8080;
+  border-color: rgba(255, 100, 100, 0.4);
+}
+
+/* ── Scrollbars ────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
 /* ── Calendar Page ─────────────────────────────────── */
+.calendar-app {
+  height: calc(100vh - 48px);
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 .calendar-layout {
   display: grid;
   grid-template-columns: 1fr 320px;
-  gap: 20px;
-  align-items: start;
+  gap: 16px;
+  align-items: stretch;
+  flex: 1.25;
+  min-height: 0;
+  margin-bottom: 16px;
+  overflow: hidden;
 }
 
 .calendar-panel,
@@ -771,30 +881,57 @@ body {
   box-shadow: 0 8px 32px var(--shadow);
   backdrop-filter: blur(var(--blur-amount));
   -webkit-backdrop-filter: blur(var(--blur-amount));
-  padding: 24px;
+  padding: 16px 20px;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .calendar-panel {
   position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.tasks-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.tasks-panel h2 {
+  margin: 0 0 12px;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.tasks-panel-content {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: 4px;
 }
 
 .calendar-nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
+  flex-shrink: 0;
 }
 
 .calendar-title {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.35rem;
   font-weight: 600;
 }
 
 .nav-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   border: 1px solid var(--glass-border);
   background: var(--glass);
   color: var(--ink);
@@ -813,25 +950,27 @@ body {
 .calendar-table {
   width: 100%;
   border-collapse: separate;
-  border-spacing: 4px;
+  border-spacing: 3px;
   table-layout: fixed;
+  flex: 1;
+  min-height: 0;
 }
 
 .calendar-table th {
-  padding: 10px 6px;
+  padding: 4px 4px;
   color: var(--muted);
   font-weight: 500;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 .calendar-table td {
-  padding: 8px 6px;
-  border-radius: 12px;
+  padding: 3px;
+  border-radius: 8px;
   text-align: center;
   vertical-align: top;
-  height: 70px;
+  height: auto;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid transparent;
   transition: background 0.15s, border-color 0.15s;
@@ -858,7 +997,7 @@ body {
 
 .day-number {
   display: block;
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   font-weight: 500;
 }
 
@@ -866,21 +1005,21 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  margin-top: 4px;
+  gap: 2px;
+  margin-top: 2px;
   flex-wrap: wrap;
 }
 
 .dot {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: #4ade80;
   display: inline-block;
 }
 
 .more {
-  font-size: 0.6rem;
+  font-size: 0.58rem;
   color: var(--muted);
   margin-left: 2px;
 }
@@ -889,15 +1028,17 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-top: 20px;
-  padding: 10px 16px;
-  border-radius: 12px;
+  margin-top: 10px;
+  padding: 8px 14px;
+  border-radius: 10px;
   border: 1px solid var(--glass-border);
   background: var(--glass);
   color: var(--muted);
   text-decoration: none;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   transition: background 0.2s, color 0.2s;
+  align-self: flex-start;
+  flex-shrink: 0;
 }
 
 .back-link:hover {
@@ -906,17 +1047,17 @@ body {
 }
 
 /* ── Tasks Panel (Calendar Page) ────────────────────── */
-.tasks-panel h2 {
-  margin: 0 0 16px;
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--muted);
+.tasks-panel .scheduled-section {
+  margin-bottom: 12px;
+}
+
+.tasks-panel .scheduled-section:last-child {
+  margin-bottom: 0;
 }
 
 .tasks-panel .scheduled-section h3 {
-  margin: 0 0 8px;
-  font-size: 0.75rem;
+  margin: 0 0 6px;
+  font-size: 0.72rem;
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -924,25 +1065,109 @@ body {
 
 .tasks-panel .scheduled-section ul {
   list-style: none;
-  margin: 0 0 16px;
+  margin: 0 0 10px;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .tasks-panel .scheduled-section li {
-  padding: 10px 14px;
-  border-radius: 12px;
+  padding: 8px 10px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.06);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .tasks-panel .scheduled-section li .task-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Week Section ───────────────────────────────────── */
+.week-section {
+  flex: 0.85;
+  min-height: 0;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px var(--shadow);
+  backdrop-filter: blur(var(--blur-amount));
+  -webkit-backdrop-filter: blur(var(--blur-amount));
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin-top: 0;
+}
+
+.week-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  flex-shrink: 0;
+}
+
+.week-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.week-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: 4px;
+}
+
+.week-day {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.week-day-title {
+  margin: 0 0 6px;
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.week-day ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.week-day li {
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 0.82rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
+
+.week-day li .task-title {
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -955,7 +1180,7 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-top: 16px;
+  margin-top: auto;
   margin-left: auto;
   padding: 8px 14px;
   border-radius: 10px;
@@ -976,16 +1201,37 @@ body {
 @media (max-width: 1100px) {
   .layout {
     grid-template-columns: 200px 1fr;
-    min-height: auto;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+  .main-content {
+    max-height: 600px;
   }
   .right-panel {
     grid-column: 1 / -1;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+  .calendar-app {
+    height: auto;
+    max-height: none;
+    overflow: visible;
   }
   .calendar-layout {
     grid-template-columns: 1fr;
+    height: auto;
+    max-height: none;
+  }
+  .tasks-panel {
+    max-height: 400px;
+  }
+  .week-section {
+    max-height: 400px;
   }
 }
 
@@ -1001,10 +1247,10 @@ body {
     right: 16px;
   }
   .calendar-table td {
-    height: 50px;
-    padding: 4px 3px;
+    height: 36px;
+    padding: 2px;
   }
   .day-number {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
   }
 }

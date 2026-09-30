@@ -94,21 +94,29 @@
           {% if tasks %}
             <ul class="task-list">
               {% for task in tasks %}
-                <li class="task{% if task.done %} is-done{% endif %}">
-                  <div>
+                <li class="task{% if task.done %} is-done{% endif %}" data-task-id="{{ task.id }}">
+                  <div class="task-content">
                     <p class="task-title">{{ task.title }}</p>
                     <p class="task-meta">
                       {{ task.created_at }}
                       {% if task.due_date %} &middot; &#128197; {{ task.due_date }}{% endif %}
                     </p>
                   </div>
-                  {% if task.done %}
-                    <span class="badge">Completada</span>
-                  {% else %}
-                    <form action="{{ url_for('mark_complete', task_id=task.id) }}" method="post">
-                      <button type="submit">Completar</button>
+                  <div class="task-actions">
+                    {% if not task.done %}
+                      <form action="{{ url_for('mark_complete', task_id=task.id) }}?list={{ current_list_id }}" method="post">
+                        <button type="submit" class="btn-complete">Completar</button>
+                      </form>
+                    {% endif %}
+                    <button type="button" class="btn-edit" data-task-id="{{ task.id }}" data-task-title="{{ task.title }}" data-task-due-date="{{ task.due_date or '' }}">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    </button>
+                    <form action="{{ url_for('delete_task_route', task_id=task.id) }}?list={{ current_list_id }}" method="post" onsubmit="return confirm('Eliminar esta tarea?');">
+                      <button type="submit" class="btn-delete-task">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                      </button>
                     </form>
-                  {% endif %}
+                  </div>
                 </li>
               {% endfor %}
             </ul>
@@ -153,24 +161,26 @@
 
           <div class="scheduled">
             <h3>Programadas</h3>
-            {% if scheduled %}
-              {% set grouped = scheduled | groupby('due_date') %}
-              {% for due_date, tasks in grouped %}
-                <div class="scheduled-section">
-                  <h4>{{ due_date }}</h4>
-                  <ul>
-                    {% for task in tasks %}
-                      <li>
-                        <span>{{ task.title }}</span>
-                        <span class="list-tag">{{ task.list_name }}</span>
-                      </li>
-                    {% endfor %}
-                  </ul>
-                </div>
-              {% endfor %}
-            {% else %}
-              <p class="empty">No hay tareas programadas.</p>
-            {% endif %}
+            <div class="scheduled-content">
+              {% if scheduled %}
+                {% set grouped = scheduled | groupby('due_date') %}
+                {% for due_date, tasks in grouped %}
+                  <div class="scheduled-section">
+                    <h4>{{ due_date }}</h4>
+                    <ul>
+                      {% for task in tasks %}
+                        <li>
+                          <span>{{ task.title }}</span>
+                          <span class="list-tag">{{ task.list_name }}</span>
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  </div>
+                {% endfor %}
+              {% else %}
+                <p class="empty">No hay tareas programadas.</p>
+              {% endif %}
+            </div>
           </div>
 
         </aside>
@@ -202,6 +212,36 @@
           <div class="modal-actions">
             <button type="button" class="btn-cancel" id="modal-cancel">Cancelar</button>
             <button type="submit" class="btn-submit">Agregar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ══════════ Modal: Editar Tarea ══════════ -->
+    <div class="modal-overlay" id="edit-modal-overlay">
+      <div class="modal">
+        <h3>Editar tarea</h3>
+        <form id="edit-task-form" method="post">
+          <input type="hidden" name="list_id" value="{{ current_list_id }}" />
+          <div class="modal-field">
+            <label for="edit-title">Título</label>
+            <input
+              id="edit-title"
+              type="text"
+              name="title"
+              placeholder="Título de la tarea"
+              autocomplete="off"
+              required
+              autofocus
+            />
+          </div>
+          <div class="modal-field">
+            <label for="edit-due-date">Fecha límite</label>
+            <input id="edit-due-date" type="date" name="due_date" />
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-cancel" id="edit-modal-cancel">Cancelar</button>
+            <button type="submit" class="btn-submit">Guardar</button>
           </div>
         </form>
       </div>
@@ -289,5 +329,6 @@
 
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
     <script src="{{ url_for('static', filename='js/inline-edit.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/edit-task.js') }}"></script>
   </body>
 </html>
